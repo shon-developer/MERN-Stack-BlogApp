@@ -107,7 +107,24 @@ export const login = async (req, res) => {
 };
 
 // logout || method: post || /api/v1/auth/login
-export const logOut = async (req, res) => {};
+export const logOut = async (req, res) => {
+  try {
+    res.cookie("token", null, {
+      expires: new Date(Date.now(), httpOnly),
+    });
+    res.status(200).json({
+      success: true,
+      message: "User loggedOut successfully",
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error in logout functionality",
+      error,
+    });
+  }
+};
 
 // getAllUsers || method: get || /api/v1/auth/getAllUsers
 export const getAllUsers = async (req, res) => {
