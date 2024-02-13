@@ -56,7 +56,79 @@ export const signUp = async (req, res) => {
 };
 
 // login || method: post || /api/v1/auth/login
-export const login = async (req, res) => {};
+export const login = async (req, res) => {
+  try {
+    const { email, password } = req.body;
+    if (!email || !password) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid email or password",
+      });
+    }
+    // find the user
+    const user = await User.findOne({ email }).select("+password");
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "No user found, please signup",
+      });
+    }
+    const isPasswordMatched = await user.comparePassword(password);
+    if (!isPasswordMatched) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid password",
+      });
+    }
+    const token = JWT.sign({ _id: user._id }, config.JWT_SECRET, {
+      expiresIn: config.JWT_EXPIRY,
+    });
+    user.password = undefined;
+    res.cookie("token", token, cookieOptions);
+
+    res.status(200).json({
+      success: true,
+      message: "Error in login functionality",
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+      },
+      token,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error in login functionality",
+      error,
+    });
+  }
+};
 
 // logout || method: post || /api/v1/auth/login
 export const logOut = async (req, res) => {};
+
+// getAllUsers || method: get || /api/v1/auth/getAllUsers
+export const getAllUsers = async (req, res) => {
+  try {
+    const user = await User.find();
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "No user found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "All users",
+      user,
+    });
+  } catch (error) {
+    res.send(500).json({
+      success: false,
+      message: "Error in getting all users",
+      error,
+    });
+  }
+};
