@@ -1,5 +1,6 @@
 import express from "express";
 import authRoute from "./routes/authRoutes.js";
+import blogRoute from "./routes/blogRoutes.js";
 import morgan from "morgan";
 import cookieParser from "cookie-parser";
 import cors from "cors";
@@ -15,6 +16,7 @@ app.use(cookieParser());
 
 // routes
 app.use("/api/v1/auth", authRoute);
+app.use("/api/v1/blog", blogRoute);
 
 // crypto
 /*
