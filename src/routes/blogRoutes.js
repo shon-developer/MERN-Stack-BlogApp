@@ -3,6 +3,7 @@ import {
   createBlog,
   deleteBlog,
   getAllBlogs,
+  getUserBlog,
   singleBlog,
   updateBlog,
 } from "../controllers/blogControllers.js";
@@ -20,4 +21,6 @@ router.put("/update-blog/:id", updateBlog);
 router.delete("/delete-blog/:id", deleteBlog);
 // single-blog
 router.get("/single-blog/:id", singleBlog);
+// user-blog
+router.get("/user-blog/:id", getUserBlog);
 export default router;

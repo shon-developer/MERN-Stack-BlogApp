@@ -1,18 +1,40 @@
 import Blog from "../models/blogSchema.js";
+import User from "../models/userSchema.js";
+import mongoose from "mongoose";
 
 // create blog
 export const createBlog = async (req, res) => {
   try {
-    const { title, description, image } = req.body;
-    if (!title || !description || !image) {
+    const { title, description, image, userId } = req.body;
+    if (!title || !description || !image || !userId) {
       return res.status(400).json({
         success: false,
         message: "All the fields are required",
       });
     }
-    const blog = await Blog.create({ title, description, image });
+    const existingUser = await User.findById(userId);
+    if (!existingUser) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found",
+      });
+    }
+    const blog = new Blog({ title, description, image, userId });
+    // create session
+    const session = await mongoose.startSession();
+    // perform transaction
+    session.startTransaction();
+    // save blog on session basis
+    await blog.save({ session });
+    // push the blog into existing user
+    existingUser.blogs.push(blog);
+    // save existing user on session basis
+    await existingUser.save({ session });
+    // complete the session
+    await session.commitTransaction();
+    await blog.save();
     res.status(201).json({
-      success: false,
+      success: true,
       message: "Blog has been created successfully",
       blog,
     });
@@ -78,7 +100,9 @@ export const updateBlog = async (req, res) => {
 export const deleteBlog = async (req, res) => {
   try {
     const { id } = req.params;
-    const blog = await Blog.findByIdAndDelete(id);
+    const blog = await Blog.findByIdAndDelete(id).populate("userId");
+    await blog.userId.blogs.pull(blog);
+    await blog.userId.save();
     res.status(200).json({
       success: true,
       message: "Blog has been deleted successfully",
@@ -113,6 +137,31 @@ export const singleBlog = async (req, res) => {
     res.status(500).json({
       success: false,
       message: "Error in getting single blog functionality",
+      error,
+    });
+  }
+};
+
+// get userblog
+export const getUserBlog = async (req, res) => {
+  try {
+    const userBlog = await User.findById(req.params.id).populate("blogs");
+    if (!userBlog) {
+      return res.status(404).json({
+        success: false,
+        message: "No blogs found",
+      });
+    }
+    res.status(200).json({
+      success: true,
+      message: "User blogs",
+      userBlog,
+    });
+  } catch (error) {
+    console.log(error);
+    res.status(500).json({
+      success: false,
+      message: "Error is getting user blog functionality",
       error,
     });
   }

@@ -18,6 +18,10 @@ const blogSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
+    userId: {
+      type: mongoose.Types.ObjectId,
+      ref: "User",
+    },
   },
   { timestamps: true }
 );
